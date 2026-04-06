@@ -1,0 +1,8 @@
+kagglehub
+pandas
+xgboost
+scikit-learn
+matplotlib
+seaborn
+flask
+flask-cors

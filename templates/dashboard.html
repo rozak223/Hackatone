@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNCHAIN AI - Real-time Stock Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #f0f2f5 0%, #e8eaef 100%);
+            border-radius: 10px;
+            min-width: 130px;
+            border: 2px solid #667eea;
+        }
+
+        .status-item h3 {
+            color: #667eea;
+            font-size: 26px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .status-item p {
+            color: #555;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .scan-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border: 2px solid #667eea;
+        }
+
+        .scan-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scan-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .method-box {
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+        }
+
+        .method-box:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .method-box h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f2f5;
+            color: #667eea;
+            flex: 1;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+            border-top: 4px solid #667eea;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+
+        .product-card {
+            border-top-color: #667eea;
+        }
+
+        .product-card.alert {
+            border-top-color: #ff6b6b;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        }
+
+        .product-card.warning {
+            border-top-color: #ffa940;
+            background: linear-gradient(135deg, #fffbe6 0%, #ffe58f 100%);
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .product-id {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .stock-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            background: #f0f2f5;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-alert {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .alerts-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .alerts-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .alert-item {
+            background: #fff5f5;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-priority {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 5px;
+        }
+
+        .alert-message {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            opacity: 0.3;
+            margin-bottom: 15px;
+        }
+
+        .controls-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+
+        .timestamp {
+            text-align: right;
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .online-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .status-indicator {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .status-item {
+                width: 100%;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>🚀 SYNCHAIN AI Dashboard</h1>
+                <p style="color: #666; margin-top: 5px;">Real-time Stock Monitoring & Predictions</p>
+            </div>
+            <div class="status-indicator">
+                <div class="status-item">
+                    <h3 id="total-products">0</h3>
+                    <p>Total Produk</p>
+                </div>
+                <div class="status-item">
+                    <h3 id="restock-count">0</h3>
+                    <p>Butuh Restock</p>
+                </div>
+                <div class="status-item">
+                    <h3 id="alert-count">0</h3>
+                    <p>Alerts</p>
+                </div>
+                <div style="color: #4caf50; font-weight: bold;">
+                    Online
+                    <span class="online-indicator"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-section">
+            <h3 style="margin-bottom: 15px; color: #333;">Update Stok</h3>
+            <div class="control-group">
+                <div class="input-group">
+                    <input type="number" id="product-id" placeholder="ID Produk" min="1">
+                    <input type="number" id="stock-value" placeholder="Jumlah Stok Baru" min="0">
+                    <button class="refresh-btn" onclick="updateStock()">Update</button>
+                </div>
+                <button class="refresh-btn" onclick="refreshDashboard()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alerts-section">
+            <h2>⚠️ Alerts & Notifications</h2>
+            <div id="alerts-container">
+                <div class="empty-state">Tidak ada alerts saat ini ✅</div>
+            </div>
+        </div>
+
+        <!-- Products Dashboard -->
+        <div style="margin-bottom: 20px;">
+            <h2 style="color: white; margin-bottom: 15px;">📦 Monitoring Produk</h2>
+        </div>
+        <div class="dashboard" id="products-container">
+            <div class="empty-state">
+                <p>Loading products...</p>
+            </div>
+        </div>
+
+        <div class="timestamp" id="last-update">Updating...</div>
+    </div>
+
+    <script>
+        // Constants
+        const API_BASE = '/api';
+        const REFRESH_INTERVAL = 3000; // 3 seconds
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    updateUI(data);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateUI(data) {
+            const summary = data.summary;
+            const products = data.products;
+
+            // Update summary
+            document.getElementById('total-products').textContent = summary.total_products;
+            document.getElementById('restock-count').textContent = summary.restock_needed;
+            
+            // Update products
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state">Tidak ada produk</div>';
+                return;
+            }
+
+            products.forEach(product => {
+                const percentage = (product.stock / (product.forecast + 0.01)) * 100;
+                const cardClass = product.priority === 'HIGH' ? 'alert' : 
+                                 product.restock_needed ? 'warning' : '';
+                const statusClass = product.priority === 'HIGH' ? 'status-alert' :
+                                   product.restock_needed ? 'status-warning' : 'status-ok';
+
+                const card = document.createElement('div');
+                card.className = `card product-card ${cardClass}`;
+                card.innerHTML = `
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-id">ID: ${product.id}</div>
+                    
+                    <div class="stock-info">
+                        <div class="info-item">
+                            <div class="info-label">Stok Saat Ini</div>
+                            <div class="info-value">${product.stock}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Prediksi Demand</div>
+                            <div class="info-value">${product.forecast.toFixed(0)}</div>
+                        </div>
+                    </div>
+
+                    <div class="stock-info">
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value" style="font-size: 14px;">${product.status}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Priority</div>
+                            <div class="info-value" style="font-size: 14px; color: ${product.priority === 'HIGH' ? '#ff6b6b' : '#ffa940'}">${product.priority}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Stock Utilization</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(percentage, 100)}%"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">${percentage.toFixed(1)}%</div>
+                    </div>
+
+                    <span class="status-badge ${statusClass}">${product.status}</span>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="editStock(${product.id})">Edit Stok</button>
+                        <button class="btn btn-secondary" onclick="viewDetails(${product.id})">Details</button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            // Load alerts
+            loadAlerts();
+
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('last-update').textContent = `Last updated: ${now.toLocaleTimeString('id-ID')}`;
+        }
+
+        async function loadAlerts() {
+            try {
+                const response = await fetch(`${API_BASE}/alerts/list`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const alertsContainer = document.getElementById('alerts-container');
+                    
+                    if (data.alerts.length === 0) {
+                        alertsContainer.innerHTML = '<div class="empty-state">Tidak ada alerts saat ini ✅</div>';
+                        return;
+                    }
+
+                    alertsContainer.innerHTML = '';
+                    data.alerts.forEach((alert, index) => {
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert-item';
+                        alertDiv.innerHTML = `
+                            <div class="alert-content">
+                                <div class="alert-priority">🔴 ${alert.priority} - ${alert.alert_type}</div>
+                                <div class="alert-message">${alert.message}</div>
+                                <div class="alert-time">${new Date(alert.timestamp).toLocaleTimeString('id-ID')}</div>
+                            </div>
+                            <div class="alert-actions">
+                                <button class="btn btn-primary" onclick="acknowledgeAlert(${index})">OK</button>
+                            </div>
+                        `;
+                        alertsContainer.appendChild(alertDiv);
+                    });
+
+                    document.getElementById('alert-count').textContent = data.alerts.length;
+                }
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        async function updateStock() {
+            const productId = parseInt(document.getElementById('product-id').value);
+            const stockValue = parseInt(document.getElementById('stock-value').value);
+
+            if (!productId || stockValue < 0) {
+                alert('Please enter valid product ID and stock value');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/inventory/update/${productId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock: stockValue })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert(`✅ Stock updated!\nNew stock: ${data.current_stock}\nPrediction: ${data.prediction.toFixed(0)} units`);
+                    document.getElementById('product-id').value = '';
+                    document.getElementById('stock-value').value = '';
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error updating stock: ' + error.message);
+            }
+        }
+
+        function editStock(productId) {
+            const newStock = prompt(`Enter new stock for product ${productId}:`, '');
+            if (newStock !== null && newStock !== '') {
+                document.getElementById('product-id').value = productId;
+                document.getElementById('stock-value').value = newStock;
+                updateStock();
+            }
+        }
+
+        function viewDetails(productId) {
+            alert(`Product ID: ${productId}\nFeature coming soon...`);
+        }
+
+        function acknowledgeAlert(index) {
+            alert('Alert acknowledged!');
+            loadAlerts();
+        }
+
+        async function refreshDashboard() {
+            loadDashboard();
+        }
+
+        // Auto-refresh
+        setInterval(loadDashboard, REFRESH_INTERVAL);
+
+        // Initial load
+        loadDashboard();
+    </script>
+</body>
+</html>
