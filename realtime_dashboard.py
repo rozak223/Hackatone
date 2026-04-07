@@ -5,7 +5,7 @@ Live stock tracking dengan prediksi AI dan alerts otomatis
 
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
-from synchain_advanced import SynChainAI_Advanced
+from ai.synchain_advanced import SynChainAI_Advanced
 import pandas as pd
 import json
 import threading
