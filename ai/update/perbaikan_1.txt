@@ -1,0 +1,53 @@
+===== SYNCHAIN AI =====
+
+- menambahkan target_candidates = ['quantity_sold]
+- menggunakan data yang dibuat oleh AI, bukan data random lagi
+    ai = SynChainAI_Advanced()
+    demo_data = ai.load_local_data('data/demand_prediction_dataset.csv')
+- memperbaiki fungsi preprocess_data
+      # SEBELUM (bermasalah):
+    X_scaled = self.scaler.fit_transform(X)
+    return X_scaled, y, target_col
+
+      # SESUDAH (sudah diperbaiki):
+    X_scaled_array = self.scaler.fit_transform(X)
+    X_scaled = pd.DataFrame(X_scaled_array, columns=self.feature_columns)
+    #          ↑ bungkus array ke DataFrame dengan nama kolom asli
+    return X_scaled, y, target_col
+- memperbaiki fungsi _single_prediction
+      # SEBELUM:
+    input_scaled = self.scaler.transform(input_df)
+
+    # SESUDAH:
+    input_scaled_array = self.scaler.transform(input_df)
+    input_scaled = pd.DataFrame(input_scaled_array, columns=self.feature_columns)
+
+
+## Promt untuk buat datasheet
+Buatkan dataset CSV untuk melatih model prediksi demand/stok (XGBoost Regressor).
+Dataset harus memiliki TEPAT kolom-kolom berikut:
+KOLOM TARGET (wajib):
+- quantity_sold [integer, range 10-500] → jumlah unit terjual per transaksi
+KOLOM FITUR PRODUK:
+- product_id [integer, range 1-100] → ID produk unik
+- category [string, pilihan: Electronics, Clothing, Food, Furniture, Sports] → kategori produk
+- price [float, range 5.0-1500.0] → harga satuan produk
+- brand [string, pilihan: BrandA, BrandB, BrandC, BrandD] → merek produk
+- weight_kg [float, range 0.1-50.0] → berat produk dalam kg
+KOLOM FITUR WAKTU:
+- month [integer, range 1-12] → bulan transaksi
+- day_of_week [integer, range 0-6] → hari dalam seminggu (0=Senin)
+- quarter [integer, range 1-4] → kuartal tahun
+- is_holiday [integer, 0 atau 1] → apakah hari libur
+KOLOM KONTEKS BISNIS:
+- supplier [string, pilihan: SupplierA, SupplierB, SupplierC] → nama supplier
+- warehouse_location [string, pilihan: Jakarta, Bandung, Surabaya, Medan] → lokasi gudang
+- discount_percent [float, range 0.0-50.0] → diskon dalam persen
+- stock_available [integer, range 0-1000] → stok tersedia sebelum transaksi
+ATURAN WAJIB:
+1. Buat 1000 baris data
+2. Format output: CSV dengan header
+3. Tidak ada missing value (semua sel harus terisi)
+4. Setiap kolom string hanya boleh berisi pilihan yang sudah ditentukan di atas (kardinalitas rendah)
+5. Buat korelasi yang realistis: misalnya Electronics cenderung punya price tinggi, quantity_sold lebih rendah di bulan 1-2, discount_percent tinggi meningkatkan quantity_sold
+6. Tidak perlu kolom ID baris / index tambahan
